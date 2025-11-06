@@ -1,5 +1,5 @@
 ########## Stage 1: Build PHP extensions and install Composer deps ##########
-FROM php:8.2-cli AS build
+FROM php:8.2-apache AS build
 WORKDIR /app
 
 # System deps for PHP extensions
@@ -20,7 +20,9 @@ RUN docker-php-ext-install \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Install only production dependencies
-COPY composer.* ./
+COPY artisan composer.* .
+COPY bootstrap/ ./bootstrap
+COPY routes/ ./routes/
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 ########## Stage 2: PHP-Apache runtime ##########
@@ -28,11 +30,10 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 # System deps for runtime (match needed libs for extensions)
-RUN apt-add-repository main && apt-add-repository restricted && apt-add-repository universe && apt-add-repository multiverse
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libzip4 libxml2 \
+        libzip5 libxml2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable required PHP extensions and Apache modules, set Laravel docroot
