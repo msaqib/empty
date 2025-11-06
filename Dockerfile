@@ -28,6 +28,8 @@ FROM php:8.2-apache
 WORKDIR /var/www/html
 
 # System deps for runtime (match needed libs for extensions)
+RUN apt-add-repository main && apt-add-repository restricted && apt-add-repository universe && apt-add-repository multiverse
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libzip4 libxml2 \
