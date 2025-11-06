@@ -33,7 +33,7 @@ WORKDIR /var/www/html
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libzip5 libxml2 \
+        libzip5 libxml2 libonig5 libzip-dev libxml2-dev libonig-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable required PHP extensions and Apache modules, set Laravel docroot
