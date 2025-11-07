@@ -36,22 +36,43 @@ RUN apt-get update \
         libzip5 libxml2 libonig5 libzip-dev libxml2-dev libonig-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable required PHP extensions and Apache modules, set Laravel docroot
+# Enable required PHP extensions and Apache modules
 RUN docker-php-ext-install \
         bcmath \
         mbstring \
         pdo \
         pdo_mysql \
         xml \
-    && a2enmod rewrite \
-    && sed -ri 's#DocumentRoot /var/www/html#DocumentRoot /var/www/html/public#g' /etc/apache2/sites-available/000-default.conf \
-    && printf '<Directory /var/www/html/public>\n\tAllowOverride All\n\tRequire all granted\n</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
-    && a2enconf laravel
+    && a2enmod rewrite
+
+# Configure Apache for Laravel (set DocumentRoot to public directory)
+RUN printf '<VirtualHost *:80>\n\tServerAdmin webmaster@localhost\n\tDocumentRoot /var/www/html/public\n\t\n\t<Directory /var/www/html/public>\n\t\tOptions Indexes FollowSymLinks\n\t\tAllowOverride All\n\t\tRequire all granted\n\t</Directory>\n\t\n\tErrorLog ${APACHE_LOG_DIR}/error.log\n\tCustomLog ${APACHE_LOG_DIR}/access.log combined\n</VirtualHost>\n' > /etc/apache2/sites-available/000-default.conf \
+    && a2ensite 000-default.conf
 
 # Copy application source
 COPY . .
 
 # Copy vendor from build stage
 COPY --from=build /app/vendor ./vendor
+
+# Create Laravel storage and cache directories and set permissions
+RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && mkdir -p database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/database \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache \
+    && chmod 664 /var/www/html/database/database.sqlite
+
+# Clear Laravel config and route cache to ensure changes take effect
+RUN rm -f bootstrap/cache/*.php 2>/dev/null || true \
+    && find bootstrap/cache -type f -name "*.php" -delete 2>/dev/null || true
+
+# Set environment variable to ensure file-based sessions are used
+ENV SESSION_DRIVER=file
 
 EXPOSE 80
