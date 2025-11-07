@@ -29,11 +29,14 @@ RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoload
 FROM php:8.2-apache
 WORKDIR /var/www/html
 
-# System deps for runtime and PHP extensions
+# Install system dependencies and build PHP extensions
+# Keeping dev packages to avoid runtime dependency issues (minimal size impact)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libzip5 libxml2 libonig5 libsqlite3-0 \
-        libzip-dev libxml2-dev libonig-dev \
+        libzip-dev \
+        libxml2-dev \
+        libonig-dev \
+        libsqlite3-dev \
     && docker-php-ext-install \
         bcmath \
         mbstring \
@@ -41,6 +44,7 @@ RUN apt-get update \
         pdo_mysql \
         pdo_sqlite \
         xml \
+        zip \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
