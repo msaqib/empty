@@ -2,7 +2,8 @@
 ### Base URL: https://empty-x3pd.onrender.com
 
 ### Variables
-@baseUrl = http://localhost:8080
+@baseUrl = https://empty-production-a85c.up.railway.app
+#@baseUrl = http://localhost:8080
 @contentType = application/json
 
 ### 1. Get all notes
