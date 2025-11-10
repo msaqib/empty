@@ -2,19 +2,19 @@
 FROM php:8.2-apache AS build
 WORKDIR /app
 
-# System deps and PHP extensions required by Laravel
+# System deps for PHP extensions
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git unzip libzip-dev libxml2-dev libonig-dev libsqlite3-dev \
-    && docker-php-ext-install \
+        git unzip libzip-dev libxml2-dev libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# PHP extensions required by Laravel
+RUN docker-php-ext-install \
         bcmath \
         mbstring \
         pdo \
         pdo_mysql \
-        pdo_sqlite \
-        xml \
-    && apt-get purge -y libsqlite3-dev \
-    && rm -rf /var/lib/apt/lists/*
+        xml
 
 # Copy Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -42,7 +42,6 @@ RUN apt-get update \
         mbstring \
         pdo \
         pdo_mysql \
-        pdo_sqlite \
         xml \
         zip \
     && a2enmod rewrite \
@@ -75,15 +74,7 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 RUN rm -f bootstrap/cache/*.php 2>/dev/null || true \
     && find bootstrap/cache -type f -name "*.php" -delete 2>/dev/null || true
 
-# Set environment variables
+# Set environment variable to ensure file-based sessions are used
 ENV SESSION_DRIVER=file
-ENV DB_CONNECTION=sqlite
-ENV DB_DATABASE=/var/www/html/database/database.sqlite
-
-# Copy and set up entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 80
