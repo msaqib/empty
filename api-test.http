@@ -1,0 +1,60 @@
+### Notes API Test Requests
+### Base URL: https://empty-x3pd.onrender.com
+
+### Variables
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### 1. Get all notes
+GET {{baseUrl}}/api/notes
+
+### 2. Create a new note
+POST {{baseUrl}}/api/notes
+Content-Type: {{contentType}}
+
+{
+  "title": "My First Note",
+  "content": "This is the content of my first note"
+}
+
+### 3. Get a specific note (replace 1 with actual ID)
+GET {{baseUrl}}/api/notes/1
+
+### 4. Update a note (replace 1 with actual ID)
+PUT {{baseUrl}}/api/notes/2
+Content-Type: {{contentType}}
+
+{
+  "title": "Updated Title",
+  "content": "Updated content here"
+}
+
+### 5. Delete a note (replace 1 with actual ID)
+DELETE {{baseUrl}}/api/notes/1
+
+### 6. Create another note for testing
+POST {{baseUrl}}/api/notes
+Content-Type: {{contentType}}
+
+{
+  "title": "Test Note",
+  "content": "This is a test note"
+}
+
+### 7. Create a note with only title (content is optional)
+POST {{baseUrl}}/api/notes
+Content-Type: {{contentType}}
+
+{
+  "title": "Note without content"
+}
+
+### 8. Create a second note
+
+POST {{baseUrl}}/api/notes
+Content-Type: {{contentType}}
+
+{
+  "title": "My second Note",
+  "content": "This is the content of my second note"
+}

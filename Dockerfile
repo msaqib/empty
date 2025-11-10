@@ -2,27 +2,34 @@
 FROM php:8.2-apache AS build
 WORKDIR /app
 
-# System deps for PHP extensions
+# System deps and PHP extensions required by Laravel
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git unzip libzip-dev libxml2-dev libonig-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# PHP extensions required by Laravel
-RUN docker-php-ext-install \
+        git unzip libzip-dev libxml2-dev libonig-dev libsqlite3-dev \
+    && docker-php-ext-install \
         bcmath \
         mbstring \
         pdo \
         pdo_mysql \
-        xml
+        pdo_sqlite \
+        xml \
+    && apt-get purge -y libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install only production dependencies
-COPY artisan composer.* .
-COPY bootstrap/ ./bootstrap
+# Copy only the files needed to install PHP dependencies
+COPY composer.* ./
+COPY artisan ./
+COPY app/ ./app/
+COPY bootstrap/ ./bootstrap/
+COPY config/ ./config/
+COPY database/ ./database/
 COPY routes/ ./routes/
+COPY resources/ ./resources/
+
+# Install production dependencies
 RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 ########## Stage 2: PHP-Apache runtime ##########
@@ -42,6 +49,7 @@ RUN apt-get update \
         mbstring \
         pdo \
         pdo_mysql \
+        pdo_sqlite \
         xml \
         zip \
     && a2enmod rewrite \
@@ -74,7 +82,17 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 RUN rm -f bootstrap/cache/*.php 2>/dev/null || true \
     && find bootstrap/cache -type f -name "*.php" -delete 2>/dev/null || true
 
-# Set environment variable to ensure file-based sessions are used
+# Set environment variables
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 ENV SESSION_DRIVER=file
+ENV DB_CONNECTION=sqlite
+ENV DB_DATABASE=/var/www/html/database/database.sqlite
+
+# Copy and set up entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 80
