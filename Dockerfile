@@ -87,7 +87,7 @@ ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV SESSION_DRIVER=file
 ENV DB_CONNECTION=sqlite
-ENV DB_DATABASE=/var/www/html/database/database.sqlite
+ENV DB_DATABASE=/database/database.sqlite
 
 # Copy and set up entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/

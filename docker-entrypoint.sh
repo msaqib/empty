@@ -19,7 +19,7 @@ LOG_CHANNEL=stack
 LOG_LEVEL=debug
 
 DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/database/database.sqlite
+DB_DATABASE=/database/database.sqlite
 EOF
   fi
 fi
@@ -38,10 +38,17 @@ fi
 mkdir -p storage/framework/{cache,views,sessions} \
   storage/logs \
   bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache database || true
+chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R 775 storage bootstrap/cache || true
-touch database/database.sqlite
-chmod 664 database/database.sqlite || true
+
+DB_FILE="${DB_DATABASE:-/database/database.sqlite}"
+DB_DIR="$(dirname "$DB_FILE")"
+
+mkdir -p "$DB_DIR"
+touch "$DB_FILE"
+chown www-data:www-data "$DB_DIR" "$DB_FILE" || true
+chmod 775 "$DB_DIR" || true
+chmod 664 "$DB_FILE" || true
 
 # Run migrations
 php artisan migrate --force --no-interaction
